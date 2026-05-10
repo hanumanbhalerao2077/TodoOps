@@ -1,117 +1,104 @@
-# ❤️ MERN Stack Todo App 📋
+# TodoOps
 
-A simple yet powerful full-stack todo application built with the MERN stack. Organize your tasks efficiently with a clean and responsive user interface.
+A cloud-native MERN Todo application containerized with Docker and deployable on Kubernetes for scalable environments.
 
-- [🚀 _Live Project Demo_ 😍](https://mern-todofy.netlify.app/)
+## What this repository contains
 
-## 🚀 About the Project
+- client/ - React frontend application
+- server/ - Node.js + Express backend API
+- docker-compose.yml - local multi-container development setup
+- k8s/ - Kubernetes manifests for namespace, deployments, services, ingress, PVC, ConfigMap, and HPA
+- .gitignore - ignores local artifacts such as kubectl.exe, .env, and 
+ode_modules
 
-This is a full-stack Todo application that allows users to create, read, update, and delete (CRUD) tasks. It's built with the MERN stack (MongoDB, Express.js, React.js, Node.js) to provide a seamless and fast user experience.
+## Features
 
-## 🛠️ Tech Stack
+- Full MERN stack: MongoDB, Express, React, Node
+- Docker Compose for local development
+- Kubernetes manifests for production-like deployments
+- Nginx-based frontend serving optimized React build
+- MongoDB persistent storage via PVC
+- Backend and frontend service definitions
+- Ingress support for local Kubernetes access
 
-**Client (Frontend):**
+## Get started
 
-- **React.js**: A JavaScript library for building the user interface.
-- **HTML, CSS**: For structuring and styling the application.
-- **TailwindCSS**: A utility-first CSS framework for rapid UI development.
+### 1. Clone the repository
 
-**Server (Backend):**
+`ash
+git clone https://github.com/hanumanbhalerao2077/TodoOps.git
+cd TodoOps
+`
 
-- **Node.js**: A JavaScript runtime environment.
-- **Express.js**: A web application framework for building the RESTful API.
-- **Mongoose**: An object data modeling (ODM) library for MongoDB.
+### 2. Install dependencies
 
-**Database:**
-
-- **MongoDB**: A NoSQL database for storing todos.
-
-## 🌱 Project Structure
-
-The repository is organized into two main folders to separate the frontend and backend concerns.
-
-```bash
-/MERN-Todo
-
-├── client/                      # Frontend React application
-│   ├── public/
-│   ├── src/                     # Source code
-│   │   └── App.jsx
-│   ├── .env                     # Environment variables
-│   ├── index.css                # Global styles
-│   ├── index.html               # HTML entry point
-│   └── index.jsx                # React entry point
-│
-└── server/                      # Backend Node.js and Express.js application
-│   ├── controllers/             # Request handling logic
-│   ├── models/                  # Mongoose schemas
-│   ├── node_modules/
-│   ├── routes/                  # API route definitions
-│   ├── .env                     # Environment variables
-│   └── index.js                 # Server entry point
-│
-└── README.md                    # Project documentation
-```
-
-## 🎻 Prerequisites
-
-Before getting started with the Practicing Projects, you should have a basic understanding of `MongoDB, Express.js, React.js, Node.js, HTML, CSS, TailwindCSS and JavaScript.`
-
-## 🔥 Clone this Repository
-
-You need to write the following commands on the terminal screen (in vscode) so that you can run this project locally.
-
-```bash
-git clone https://github.com/chetannada/MERN-Todo.git
-```
-
-Go to the project directory
-
-```bash
-cd MERN-Todo
-```
-
-Install dependencies for both client and server:
-
-```bash
-Install client dependencies
-
+`ash
 cd client
 npm install
-
-Install server dependencies
-
 cd ../server
 npm install
-```
+`
 
-Set up environment variables:
+### 3. Use Docker Compose for local development
 
-    * .env - environment variables for this project to run in development environment (fill with actual values for environment variables)
+`ash
+docker compose up --build
+`
 
-Run the application:
+Then open:
 
-- In the **server** directory, start the backend server:
+- Frontend: http://localhost:3000
+- Backend: http://localhost:5000
 
-  ```bash
-  npm run start
-  ```
+### 4. Use Kubernetes for scalable deployment
 
-- In the **client** directory, start the frontend app:
-  ```bash
-  npm run dev
-  ```
+If you have a local cluster (Docker Desktop Kubernetes, Minikube, or Kind):
 
-The client application will now be running on `http://localhost:3000` and the server will be listening on `http://localhost:5000`.
+`ash
+kubectl apply -k k8s
+`
 
-If you want to Fork repository and want to run locally, follow this guidelines [Fork and Clone Github Repository](https://docs.github.com/en/get-started/quickstart/fork-a-repo)
+Verify resources:
 
-## ✏️ Contributing
+`ash
+kubectl get all -n mern-todo
+kubectl get pvc -n mern-todo
+kubectl get ingress -n mern-todo
+`
 
-This is an Open-Source repository, and contributions are always welcome! If you find an issue, please create a new issue under the "Issues" section. To contribute code, fork the repository and submit a pull request. Your contributions will help make this a valuable resource for the community!
+### 5. Access the app in Kubernetes
 
-## 🤝 Let's Connect
+If using ingress with a local host entry:
 
-[![linkedin](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/chetannada/)
-[![twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/chetannada)
-[![discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discordapp.com/users/916005177838956555)
+- Add 127.0.0.1 mern-todo.local to your hosts file
+- Visit http://mern-todo.local
+
+Or port-forward the frontend service:
+
+`ash
+kubectl port-forward svc/mern-todo-frontend 3000:3000 -n mern-todo
+`
+
+Then open http://localhost:3000.
+
+## Notes
+
+- .env files are used for local configuration and should not be pushed with sensitive values.
+- kubectl.exe is ignored and not included in the repository.
+- For production deployments, update image references in k8s/ manifests and use a container registry.
+
+## Project structure
+
+`	ext
+TodoOps/
+├── client/
+├── server/
+├── k8s/
+├── docker-compose.yml
+└── README.md
+`
+
+## License
+
+This project is open for collaboration and can be extended for deployment automation and DevOps workflows.
+
