@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mern-todo
+  labels:
+    name: mern-todo
+    version: v1
+  annotations:
+    description: "MERN Stack Todo Application Namespace"

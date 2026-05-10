@@ -1,0 +1,120 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  namespace: mern-todo
+  labels:
+    app: mern-todo
+    component: database
+    version: v1
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mern-todo
+      component: database
+  template:
+    metadata:
+      labels:
+        app: mern-todo
+        component: database
+        version: v1
+      annotations:
+        prometheus.io/scrape: "false"
+    spec:
+      # DNS policy for service discovery
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      
+      # Container specification
+      containers:
+      - name: mongodb
+        image: mongo:7.0
+        imagePullPolicy: IfNotPresent
+        
+        # Port configuration
+        ports:
+        - name: mongodb
+          containerPort: 27017
+          protocol: TCP
+        
+        # Environment variables from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: mern-config
+        
+        # Volume mounts
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+        - name: mongodb-config
+          mountPath: /data/configdb
+        
+        # Resource requests and limits
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        
+        # Startup probe - allows time for MongoDB to initialize
+        startupProbe:
+          tcpSocket:
+            port: mongodb
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+        
+        # Liveness probe - restart if unresponsive
+        livenessProbe:
+          tcpSocket:
+            port: mongodb
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        # Readiness probe - ready to accept connections
+        readinessProbe:
+          tcpSocket:
+            port: mongodb
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        # Security context
+        securityContext:
+          runAsNonRoot: false
+          runAsUser: 0
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      
+      # Volumes
+      volumes:
+      - name: mongodb-data
+        persistentVolumeClaim:
+          claimName: mongodb-pvc
+      - name: mongodb-config
+        emptyDir: {}
+      
+      # Affinity rules
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                  - database
+              topologyKey: kubernetes.io/hostname

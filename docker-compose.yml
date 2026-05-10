@@ -1,0 +1,137 @@
+version: '3.9'
+
+# Define networks for service communication
+networks:
+  mern-network:
+    driver: bridge
+
+# Define volumes for persistent storage
+volumes:
+  mongo-data:
+    driver: local
+
+services:
+  # MongoDB Database Service
+  mongo:
+    image: mongo:7.0
+    container_name: mern-todo-mongo
+    restart: unless-stopped
+    
+    # Environment variables
+    environment:
+      MONGO_INITDB_DATABASE: todo
+    
+    # Volumes for data persistence
+    volumes:
+      - mongo-data:/data/db
+      - mongo-data:/data/configdb
+    
+    # Network configuration
+    networks:
+      - mern-network
+    
+    # Port mapping (not exposed by default, only for development)
+    ports:
+      - "27017:27017"
+    
+    # Resource limits (prevents container from consuming unlimited resources)
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Backend API Service
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    
+    container_name: mern-todo-backend
+    restart: unless-stopped
+    
+    # Environment variables
+    environment:
+      # MongoDB connection - use service name 'mongo' for DNS resolution in Docker
+      MONGODB_ATLAS_CONNECTION: mongodb://mongo:27017/todo
+      PORT: 5000
+      NODE_ENV: development
+    
+    # Depends on MongoDB being available
+    depends_on:
+      - mongo
+    
+    # Volume for source code (optional, only for development with hot-reload)
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    
+    # Network configuration
+    networks:
+      - mern-network
+    
+    # Port mapping
+    ports:
+      - "5000:5000"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=http://backend:5000/api
+    
+    container_name: mern-todo-frontend
+    restart: unless-stopped
+    
+    # Depends on backend being available
+    depends_on:
+      - backend
+    
+    # Network configuration
+    networks:
+      - mern-network
+    
+    # Port mapping
+    ports:
+      - "3000:3000"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
