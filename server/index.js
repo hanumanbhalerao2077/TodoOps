@@ -4,6 +4,7 @@ const todoRoutes = require("./routes/todoRoutes");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const { swaggerUi, swaggerSpec } = require("./utils/swagger");
 
 // dotenv-flow is used to manage environment variables across different environments
 dotenvFlow.config();
